@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+@theme
+{
+  /* Fonts */
+  --font-sans: "DM Sans", sans-serif;
+  --font-serif: "Instrument Serif", serif;
+
+  /* Brand Colors mapping for Tailwind utilities */
+  --color-brand-main: var(--bg-main);
+  --color-brand-sidebar: var(--bg-sidebar);
+  --color-brand-card: var(--card-bg);
+  --color-brand-border: var(--border);
+  --color-brand-hover: var(--hover-bg);
+  --color-brand-elevated: var(--surface-elevated);
+
+  /* Content Colors */
+  --color-content-primary: var(--text-primary);
+  --color-content-secondary: var(--text-secondary);
+  --color-content-sidebar: var(--text-sidebar);
+
+  /* Action Colors */
+  --color-action-primary: var(--btn-primary);
+  --color-action-primary-text: var(--btn-primary-text);
+  --color-action-secondary: var(--accent-secondary);
+
+  /* Border Radii */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+:root
+{
+  /* Light Theme Foundation - UNTOUCHED */
+  --bg-main: #F7F5EF;
+  --bg-sidebar: #202719;
+  --text-primary: #292B26;
+  --text-secondary: #77796F;
+  --text-sidebar: #F7F5EF;
+  --card-bg: #FFFFFF;
+  --border: #E8E5DC;
+  --btn-primary: #293421;
+  --btn-primary-text: #FFFFFF;
+  --btn-primary-hover: #1e2618;
+  /* Added for symmetry, though currently hardcoded opacity-90 is used in button */
+  --accent-secondary: #667044;
+  --hover-bg: #EFECE2;
+
+  /* Semantic Status Colors (Light) */
+  --status-new: #D97706;
+  --status-new-bg: #FEF3C7;
+  --status-contacted: #7C3AED;
+  --status-contacted-bg: #EDE9FE;
+  --status-proposal: #2563EB;
+  --status-proposal-bg: #DBEAFE;
+  --status-won: #059669;
+  --status-won-bg: #D1FAE5;
+  --status-lost: #DC2626;
+  --status-lost-bg: #FEE2E2;
+}
+
+.dark
+{
+  /* FIX: Applied the requested premium editorial dark palette */
+  --bg-main: #11150F;
+  --bg-sidebar: #191F17;
+  --card-bg: #232B20;
+  --surface-elevated: #2B3426;
+
+  --border: #394333;
+  --hover-bg: #30392C;
+  /* Using the subtle divider color for standard hover surfaces */
+
+  --text-primary: #F2F0E6;
+  --text-secondary: #A8B09A;
+  --text-sidebar: #F2F0E6;
+  /* Kept aligned with primary text for clean contrast */
+
+  /* FIX: Vibrant chartreuse primary button */
+  --btn-primary: #C4D879;
+  --btn-primary-text: #11150F;
+  /* Dark background color for high-contrast foreground text */
+  --btn-primary-hover: #D3E88A;
+
+  --accent-secondary: #9EBA65;
+
+  /* Semantic Status Colors (Dark) */
+  /* Maintained existing vibrant semantic hues, but adjusted background opacity to 20% to balance the richer #232B20 cards */
+  --status-new: #FBBF24;
+  --status-new-bg: rgba(251, 191, 36, 0.2);
+  --status-contacted: #A78BFA;
+  --status-contacted-bg: rgba(167, 139, 250, 0.2);
+  --status-proposal: #60A5FA;
+  --status-proposal-bg: rgba(96, 165, 250, 0.2);
+  --status-won: #34D399;
+  --status-won-bg: rgba(52, 211, 153, 0.2);
+  --status-lost: #F87171;
+  --status-lost-bg: rgba(248, 113, 113, 0.2);
+}
+
+/* Global Styles */
+body
+{
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar
+{
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track
+{
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb
+{
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover
+{
+  background: var(--text-secondary);
+}
+
+*
+{
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Retained Glassmorphism Utilities */
+@layer utilities
+{
+  .glass-panel
+  {
+    background-color: rgba(34, 39, 30, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .glass-dropdown
+  {
+    background-color: rgba(41, 47, 36, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .glass-modal
+  {
+    background-color: rgba(41, 47, 36, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 16px 48px rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-input
+  {
+    background-color: rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+  }
+
+  .dark .glass-input
+  {
+    background-color: rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
