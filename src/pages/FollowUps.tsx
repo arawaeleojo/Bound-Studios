@@ -577,7 +577,7 @@ export const FollowUps = () => {
                      rescheduleFollowUp(selectedFollowUp.id, rescheduleDate);
                      setIsDrawerOpen(false);
                    }
-                 }}>Confirm Reschedule</Button>
+                 }}>Confirm</Button>
              </div>
           </div>
         )}
