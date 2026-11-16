@@ -8,17 +8,13 @@ export const AppLayout = () => {
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
   
-  // FIX: Track the previous path to enable derived state
   const [prevPath, setPrevPath] = useState(location.pathname);
 
-  // FIX: Derived state. If the path changes, synchronously close the menu 
-  // during render rather than firing a secondary useEffect render cycle.
   if (location.pathname !== prevPath) {
     setIsMobileMenuOpen(false);
     setPrevPath(location.pathname);
   }
 
-  // Effect is retained strictly for DOM mutation (scrolling), which is the correct use of useEffect.
   useEffect(() => {
     if (mainRef.current) {
       mainRef.current.scrollTop = 0;
@@ -26,15 +22,13 @@ export const AppLayout = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-brand-main">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-brand-main">
       <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
       
       <div className="flex flex-1 flex-col overflow-hidden relative">
-        <div className="relative z-50">
-          <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
-        </div>
+        <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
         
-        <main ref={mainRef} className="flex-1 overflow-y-auto px-4 pb-4 pt-0 lg:px-8 lg:pb-8 lg:pt-0">
+        <main ref={mainRef} className="flex-1 overflow-y-auto px-4 pb-4 pt-16 lg:px-8 lg:pb-8 lg:pt-0">
           <div className="mx-auto max-w-6xl">
             <Outlet />
           </div>
