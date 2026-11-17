@@ -24,7 +24,7 @@ export const NotificationBell = () => {
   const { followUps } = useFollowUps();
   const { enquiries } = useEnquiries();
 
-  // Persist Read and Dismissed states to localStorage
+  // Persist read and dismissed interaction states to localStorage
   const [readIds, setReadIds] = useState<Set<string>>(() => {
     const saved = localStorage.getItem('bound_read_notifications');
     return saved ? new Set(JSON.parse(saved)) : new Set();
@@ -43,7 +43,7 @@ export const NotificationBell = () => {
     localStorage.setItem('bound_dismissed_notifications', JSON.stringify(Array.from(dismissedIds)));
   }, [dismissedIds]);
 
-  // Generate dynamic notifications from Follow-ups
+  // Generate dynamic notification items from active Follow-ups
   const allNotifications = useMemo(() => {
     const today = startOfDay(new Date());
     const items: NotificationItem[] = [];
@@ -51,7 +51,7 @@ export const NotificationBell = () => {
     followUps.forEach(fu => {
       const enquiry = enquiries.find(e => e.id === fu.enquiryId);
       
-      // Rely strictly on the Enquiry status. If it's Won or Lost, it's completed.
+      // Exclude follow-ups belonging to finalized (Won/Lost) enquiries
       if (!enquiry || enquiry.status === 'Won' || enquiry.status === 'Lost') return;
 
       const scheduled = startOfDay(parseISO(fu.scheduledDate));
@@ -89,11 +89,9 @@ export const NotificationBell = () => {
       }
     });
 
-    // Sort: Overdue first, then Today, then Upcoming
     return items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [followUps, enquiries]);
 
-  // Filter out dismissed notifications
   const visibleNotifications = allNotifications.filter(n => !dismissedIds.has(n.id));
   const unreadCount = visibleNotifications.filter(n => !readIds.has(n.id)).length;
 
@@ -112,22 +110,19 @@ export const NotificationBell = () => {
   };
 
   const dismissNotification = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); // Prevents the click from triggering the navigation
+    e.stopPropagation();
     const newDismissed = new Set(dismissedIds);
     newDismissed.add(id);
     setDismissedIds(newDismissed);
   };
 
   const handleNotificationClick = (id: string) => {
-    // Mark as read
     const newRead = new Set(readIds);
     newRead.add(id);
     setReadIds(newRead);
-    
-    // Close dropdown
     setIsOpen(false);
     
-    // FIX: Deep Linking! Navigate to follow-ups and pass the ID via React Router state
+    // Deep-link to the follow-ups page and open the specific record via routing state
     navigate('/follow-ups', { state: { targetFollowUpId: id } });
   };
 

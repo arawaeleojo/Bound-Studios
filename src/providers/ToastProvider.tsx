@@ -5,8 +5,10 @@ import type { Toast, ToastType } from '../contexts/ToastContext';
 import { cn } from '../utils/cn';
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+  // Manages the active queue of ephemeral toast notifications
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  // Generates a unique ID and auto-dismisses the toast after 3 seconds
   const showToast = useCallback((message: string, type: ToastType) => {
     const id = Math.random().toString(36).substr(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
@@ -18,6 +20,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
+      {/* Renders toasts in a fixed overlay using animated entry transitions */}
       <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
         {toasts.map((toast) => (
           <div

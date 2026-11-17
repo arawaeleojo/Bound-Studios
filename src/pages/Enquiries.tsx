@@ -47,6 +47,7 @@ export const Enquiries = () => {
 
   const [now] = useState(() => Date.now());
 
+  // Dynamically extract unique project types from existing enquiries for the filter dropdown
   const projectTypes = useMemo(() => {
     const types = new Set(
       enquiries
@@ -70,6 +71,7 @@ export const Enquiries = () => {
     setCurrentPage(1);
   };
 
+  // Filter and sort the enquiries based on the active search and filter state
   const filteredEnquiries = useMemo(() => {
     return enquiries
       .filter((enquiry) => {
@@ -119,16 +121,18 @@ export const Enquiries = () => {
 
   const totalPages = Math.ceil(filteredEnquiries.length / itemsPerPage);
 
-  // FIX: Derived state adjustment during render replaces the secondary useEffect cycle
+  // Safely adjust the current page if active filters reduce the total page count
   if (totalPages > 0 && currentPage > totalPages) {
     setCurrentPage(totalPages);
   }
 
+  // Slice the filtered results for the current page view
   const paginatedEnquiries = filteredEnquiries.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
+  // Global listeners to close open action menus on scroll, click, or resize
   useEffect(() => {
     const closeMenu = () => {
       setOpenMenuId(null);
@@ -145,6 +149,7 @@ export const Enquiries = () => {
     };
   }, []);
 
+  // Calculate dynamic positioning for the context menu to prevent viewport clipping
   const toggleMenu = (e: React.MouseEvent, enquiryId: string) => {
     e.stopPropagation();
     if (openMenuId === enquiryId) {
@@ -541,6 +546,7 @@ export const Enquiries = () => {
         )}
       </div>
 
+      {/* Slide-out drawer for creating, viewing, or editing an enquiry */}
       <Drawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
@@ -577,6 +583,7 @@ export const Enquiries = () => {
         )}
       </Drawer>
 
+      {/* Modal dialog for confirming destructive actions */}
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
@@ -593,6 +600,7 @@ export const Enquiries = () => {
         confirmText="Delete"
       />
 
+      {/* Render context menu in a Portal to prevent clipping within hidden overflow containers */}
       {openMenuId && menuPos && activeMenuEnquiry && createPortal(
         <div
           className="fixed z-[9999] w-36 overflow-hidden rounded-lg border border-brand-border bg-brand-card shadow-xl py-1"

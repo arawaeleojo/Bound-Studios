@@ -6,6 +6,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   error?: string;
 }
 
+// A standardized, accessible text input component with integrated label and validation error support
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, label, error, ...props }, ref) => {
     return (
@@ -16,15 +17,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           </label>
         )}
         
-        {/* FIX: Bypassing Tailwind's parser entirely. This standard CSS guarantees 
-            the browser respects our text-fill colors during autofill in both themes. */}
+        {/* Enforce theme-aware text contrast when the browser autofills the input */}
         <style>{`
           .bound-autofill-fix:-webkit-autofill {
             transition: background-color 9999s ease-in-out 0s !important;
-            -webkit-text-fill-color: #0f172a !important; /* Light mode text */
+            -webkit-text-fill-color: #0f172a !important; 
           }
           .dark .bound-autofill-fix:-webkit-autofill {
-            -webkit-text-fill-color: #f8fafc !important; /* Dark mode text */
+            -webkit-text-fill-color: #f8fafc !important; 
           }
         `}</style>
 

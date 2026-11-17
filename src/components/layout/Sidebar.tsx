@@ -18,7 +18,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile overlay to dismiss the sidebar when clicking outside */}
       {isOpen && (
         <div 
           className="fixed inset-0 z-[55] bg-black/40 backdrop-blur-sm lg:hidden"
@@ -26,7 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         />
       )}
       
-      {/* Sidebar Panel */}
+      {/* Off-canvas drawer on mobile, static sidebar on desktop */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-[60] flex w-64 flex-col justify-between bg-brand-sidebar px-4 py-6 transition-transform duration-300 lg:static lg:translate-x-0",
         isOpen ? "translate-x-0" : "-translate-x-full"
@@ -39,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               alt="Bound Studios" 
               className="h-10 w-auto max-w-[180px] object-contain block" 
               onError={(e) => {
+                // Fallback to text logo if the image asset fails to load
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}
@@ -61,10 +62,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    // Apply high-contrast styles when the route is active
                     isActive
-                      // FIX: Uses primary action color and dark text for contrast
                       ? 'bg-action-primary text-action-primary-text font-semibold shadow-sm'
-                      // FIX: Increased base opacity (80) and hover visibility (white/10) to fix the washed-out look
                       : 'text-content-sidebar/80 hover:bg-white/10 hover:text-content-sidebar'
                   )
                 }

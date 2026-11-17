@@ -7,14 +7,14 @@ import {
 import { describe, it, expect } from 'vitest';
 import type { ReactNode } from 'react';
 
-// FIX: Importing ToastProvider from the restored providers directory
+// Global context providers required for the custom hooks
 import { ToastProvider } from '../src/providers/ToastProvider';
 import {
   FollowUpsProvider,
   useFollowUps,
 } from '../src/hooks/useFollowUps';
 
-// Recreates the provider required by useFollowUps
+// Wrapper recreating the provider hierarchy required by useFollowUps
 const followUpWrapper = ({ children }: { children: ReactNode }) => (
   <ToastProvider>
     <FollowUpsProvider>
@@ -56,16 +56,12 @@ describe('Bound Studios follow-up management', () => {
       throw new Error('Follow-up was not created');
     }
 
+    // Verify all payload data was mapped correctly into the state object
     expect(createdFollowUp.enquiryId).toBe('enquiry-001');
+    expect(createdFollowUp.scheduledDate).toBe('2026-11-20T00:00:00.000Z');
+    expect(createdFollowUp.description).toBe('Discuss project proposal');
 
-    expect(createdFollowUp.scheduledDate).toBe(
-      '2026-11-20T00:00:00.000Z'
-    );
-
-    expect(createdFollowUp.description).toBe(
-      'Discuss project proposal'
-    );
-
+    // Verify the state was flushed to localStorage
     const savedFollowUps = JSON.parse(
       localStorage.getItem('bound_followups') || '[]'
     );
@@ -88,7 +84,7 @@ describe('Bound Studios follow-up management', () => {
       expect(result.current.isLoaded).toBe(true);
     });
 
-    // Create the original follow-up
+    // Seed the original follow-up record
     await act(async () => {
       result.current.addFollowUp(
         'enquiry-002',
@@ -107,7 +103,7 @@ describe('Bound Studios follow-up management', () => {
 
     const followUpId = createdFollowUp.id;
 
-    // Change its scheduled date
+    // Mutate the scheduled date
     await act(async () => {
       result.current.rescheduleFollowUp(
         followUpId,
@@ -125,23 +121,17 @@ describe('Bound Studios follow-up management', () => {
       throw new Error('Rescheduled follow-up was not found');
     }
 
-    // Check the new date
+    // Verify the core date was updated
     expect(updatedFollowUp.scheduledDate).toBe(
       '2026-11-25T00:00:00.000Z'
     );
 
-    // Check that the rescheduling activity was recorded
+    // Verify the system automatically generated a chronological activity log for the reschedule event
     expect(updatedFollowUp.activity[0]?.type).toBe('rescheduled');
+    expect(updatedFollowUp.activity[0]?.previousDate).toBe('2026-11-20T00:00:00.000Z');
+    expect(updatedFollowUp.activity[0]?.newDate).toBe('2026-11-25T00:00:00.000Z');
 
-    expect(updatedFollowUp.activity[0]?.previousDate).toBe(
-      '2026-11-20T00:00:00.000Z'
-    );
-
-    expect(updatedFollowUp.activity[0]?.newDate).toBe(
-      '2026-11-25T00:00:00.000Z'
-    );
-
-    // Check that the change was persisted
+    // Verify the mutation was persisted
     const savedFollowUps = JSON.parse(
       localStorage.getItem('bound_followups') || '[]'
     );
@@ -165,7 +155,7 @@ describe('Bound Studios follow-up management', () => {
       expect(result.current.isLoaded).toBe(true);
     });
 
-    // Set the initial follow-up date
+    // Trigger a sync which should create the initial follow-up record
     await act(async () => {
       result.current.syncEnquiryFollowUp(
         'enquiry-003',
@@ -175,7 +165,7 @@ describe('Bound Studios follow-up management', () => {
 
     expect(result.current.followUps).toHaveLength(1);
 
-    // Change the date for the same enquiry
+    // Trigger a second sync with a new date for the same parent enquiry
     await act(async () => {
       result.current.syncEnquiryFollowUp(
         'enquiry-003',
@@ -183,7 +173,7 @@ describe('Bound Studios follow-up management', () => {
       );
     });
 
-    // Confirm there is still only one follow-up
+    // Verify the system updated the existing record rather than pushing a duplicate
     expect(result.current.followUps).toHaveLength(1);
 
     const updatedFollowUp = result.current.followUps[0];
@@ -195,21 +185,14 @@ describe('Bound Studios follow-up management', () => {
     }
 
     expect(updatedFollowUp.enquiryId).toBe('enquiry-003');
+    expect(updatedFollowUp.scheduledDate).toBe('2026-11-25T00:00:00.000Z');
 
-    expect(updatedFollowUp.scheduledDate).toBe(
-      '2026-11-25T00:00:00.000Z'
-    );
-
-    // Confirm that the new date was saved
     const savedFollowUps = JSON.parse(
       localStorage.getItem('bound_followups') || '[]'
     );
 
     expect(savedFollowUps).toHaveLength(1);
-
-    expect(savedFollowUps[0].scheduledDate).toBe(
-      '2026-11-25T00:00:00.000Z'
-    );
+    expect(savedFollowUps[0].scheduledDate).toBe('2026-11-25T00:00:00.000Z');
   });
 
 });
@@ -224,6 +207,7 @@ describe('Follow-up closure activity', () => {
         result.current.addFollowUp('enquiry-1', '2026-11-20');
       });
   
+      // Simulate the parent enquiry being finalized
       act(() => {
         result.current.logClosureActivity('enquiry-1', 'Won');
       });
@@ -246,6 +230,7 @@ describe('Follow-up closure activity', () => {
         result.current.addFollowUp('enquiry-2', '2026-11-20');
       });
   
+      // Fire the closure event twice
       act(() => {
         result.current.logClosureActivity('enquiry-2', 'Won');
       });
@@ -260,6 +245,7 @@ describe('Follow-up closure activity', () => {
   
       expect(followUp).toBeDefined();
   
+      // Verify idempotency: only one closure log should exist
       const closureActivities = followUp?.activity.filter(
         (item) => item.type === 'closed' && item.description.includes('Won')
       );
@@ -280,6 +266,7 @@ describe('Follow-up closure activity', () => {
         result.current.logClosureActivity('enquiry-3', 'Won');
       });
   
+      // Mutate the final status
       act(() => {
         result.current.logClosureActivity('enquiry-3', 'Lost');
       });
@@ -292,6 +279,7 @@ describe('Follow-up closure activity', () => {
       expect(followUp?.activity[0]?.type).toBe('closed');
       expect(followUp?.activity[0]?.description).toContain('Lost');
   
+      // Verify both closure transitions were logged sequentially
       const closureActivities = followUp?.activity.filter(
         (item) => item.type === 'closed'
       );
@@ -311,6 +299,7 @@ describe('Follow-up closure activity', () => {
         result.current.addFollowUp('enquiry-4', '2026-11-20');
       });
   
+      // Simulate the user clearing the date field on the parent enquiry
       act(() => {
         result.current.syncEnquiryFollowUp('enquiry-4', null);
       });
@@ -320,6 +309,8 @@ describe('Follow-up closure activity', () => {
       );
   
       expect(followUp).toBeDefined();
+      
+      // Verify the date was wiped but the entity and its history remain intact
       expect(followUp?.scheduledDate).toBe('');
       expect(followUp?.activity.length).toBeGreaterThan(1);
       expect(followUp?.activity[0]?.description).toBe(
@@ -336,6 +327,7 @@ describe('Follow-up closure activity', () => {
         result.current.addFollowUp('enquiry-5', '2026-11-20');
       });
   
+      // Fire the null sync twice
       act(() => {
         result.current.syncEnquiryFollowUp('enquiry-5', null);
       });
@@ -348,6 +340,7 @@ describe('Follow-up closure activity', () => {
         (item) => item.enquiryId === 'enquiry-5'
       );
   
+      // Verify idempotency: only one removal log should exist
       const removalActivities = followUp?.activity.filter(
         (item) => item.description === 'Follow-up date removed from enquiry'
       );
@@ -368,6 +361,7 @@ describe('Follow-up closure activity', () => {
         result.current.syncEnquiryFollowUp('enquiry-6', null);
       });
   
+      // Re-add a date to the previously cleared record
       act(() => {
         result.current.syncEnquiryFollowUp('enquiry-6', '2026-11-25');
       });
@@ -376,6 +370,7 @@ describe('Follow-up closure activity', () => {
         (item) => item.enquiryId === 'enquiry-6'
       );
   
+      // Verify it resurrected the old record instead of spawning a new one
       expect(linkedFollowUps).toHaveLength(1);
       expect(linkedFollowUps[0]?.scheduledDate).toContain('2026-11-25');
       expect(linkedFollowUps[0]?.activity[0]?.type).toBe('rescheduled');

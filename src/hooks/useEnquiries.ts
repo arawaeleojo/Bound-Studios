@@ -10,6 +10,7 @@ export interface EnquiryStats {
   closed: number;
 }
 
+// Defines the contract for central enquiry state management and mutation methods
 interface EnquiriesContextType {
   enquiries: Enquiry[];
   addEnquiry: (enquiryData: Omit<Enquiry, 'id' | 'activity'>) => void;
@@ -25,6 +26,7 @@ export function EnquiriesProvider({ children }: { children: React.ReactNode }) {
   const { showToast } = useToast();
   const { syncEnquiryFollowUp, logClosureActivity, deleteFollowUpByEnquiryId } = useFollowUps();
   
+  // Initialize enquiry state directly from localStorage, ensuring safe JSON parsing
   const [enquiries, setEnquiries] = useState<Enquiry[]>(() => {
     try {
       const stored = localStorage.getItem('bound_enquiries');
@@ -33,13 +35,14 @@ export function EnquiriesProvider({ children }: { children: React.ReactNode }) {
         if (Array.isArray(parsed)) return parsed;
       }
     } catch {
-      // Intentionally omitting 'e' to satisfy "unused catch variables" rule.
+      // Return empty array if storage is corrupted or inaccessible
     }
     return [];
   });
   
   const [isLoaded] = useState(true);
 
+  // Core persistence handler that catches browser storage exceptions
   const saveEnquiries = (newData: Enquiry[]) => {
     setEnquiries(newData);
     try {
@@ -49,6 +52,7 @@ export function EnquiriesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Creates a new enquiry, appending initial system activity and syncing linked follow-ups
   const addEnquiry = (enquiryData: Omit<Enquiry, 'id' | 'activity'>) => {
     try {
       const dateReceived = enquiryData.dateReceived || new Date().toISOString();
@@ -78,6 +82,7 @@ export function EnquiriesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Mutates an existing enquiry, evaluating state transitions for timeline logging
   const updateEnquiry = (id: string, updates: Partial<Enquiry>) => {
     try {
       let isStatusChange = false;
@@ -113,11 +118,12 @@ export function EnquiriesProvider({ children }: { children: React.ReactNode }) {
       
       saveEnquiries(newData);
 
-      // FIX: Replaced unsafe hasOwnProperty with the ESLint-approved prototype call
+      // Ensures manual date removals trigger the sync down to the FollowUp record
       if (Object.prototype.hasOwnProperty.call(updates, 'followUpDate')) {
         syncEnquiryFollowUp(id, updates.followUpDate);
       }
 
+      // Automatically resolves or reopens linked follow-ups if the parent enquiry is won/lost
       if (isStatusChange) {
         const oldEq = enquiries.find(e => e.id === id);
         const wasClosed = oldEq?.status === 'Won' || oldEq?.status === 'Lost';
@@ -134,6 +140,7 @@ export function EnquiriesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Removes the enquiry and cascades the deletion to any orphaned follow-ups
   const deleteEnquiry = (id: string) => {
     try {
       saveEnquiries(enquiries.filter(eq => eq.id !== id));

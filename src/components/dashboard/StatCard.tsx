@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
-  value: number | string; // Fix: Now accepts formatted currency strings and percentages
+  value: number | string; 
   icon: LucideIcon;
   variant?: 'default' | 'highlight' | 'warning';
 }

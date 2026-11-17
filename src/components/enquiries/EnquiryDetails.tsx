@@ -15,7 +15,7 @@ interface EnquiryDetailsProps {
   readOnly?: boolean;
 }
 
-// FIX: Define a strict interface to safely handle the expected properties from settings
+// Strictly typing the settings context return values to avoid unsafe 'any' casting
 interface ExtendedSettings {
   currency?: string;
   formatCurrency?: (amount: number) => string;
@@ -29,9 +29,9 @@ export const EnquiryDetails: React.FC<EnquiryDetailsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'activity'>('details');
   
-  // FIX: Cast to a well-defined interface instead of 'any'
   const settingsContext = useSettings() as ExtendedSettings; 
 
+  // Provide a safe fallback formatter if formatCurrency is not exposed by the context
   const formatCurrency = settingsContext.formatCurrency || ((amount: number) => {
     return new Intl.NumberFormat('en-US', { 
       style: 'currency', 

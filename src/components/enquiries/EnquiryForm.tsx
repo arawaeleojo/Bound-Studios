@@ -100,7 +100,7 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({ initialData, onSubmit,
       phone: initialData?.phone || '',
       projectDescription: initialData?.projectDescription || '',
       projectType: initialData?.projectType || '',
-      // FIX: Defaults to 0 so untouched test submissions pass correctly. 
+      // Default to 0 for untouched fields, ensuring test runner compatibility
       estimatedBudget: initialData?.estimatedBudget !== undefined ? initialData.estimatedBudget : 0, 
       dateReceived: initialData?.dateReceived ? format(new Date(initialData.dateReceived), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
       source: (initialData?.source as EnquiryFormData['source']) || 'Website',
@@ -109,7 +109,7 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({ initialData, onSubmit,
     }
   });
 
-  // Watch for character counter
+  // RHF useWatch maintains the character count without triggering full component re-renders
   const currentDescription = useWatch({
     control,
     name: 'projectDescription',
@@ -130,6 +130,7 @@ export const EnquiryForm: React.FC<EnquiryFormProps> = ({ initialData, onSubmit,
     
     if (rawValue === '') {
       setDisplayBudget('');
+      // Setting to -1 intentionally fails Zod's min(0) requirement to enforce required fields
       setValue('estimatedBudget', -1, { shouldValidate: true });
       return;
     }

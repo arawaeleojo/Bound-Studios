@@ -4,6 +4,7 @@ import { SettingsContext } from '../contexts/SettingsContext';
 import type { Currency, DateFormat } from '../contexts/SettingsContext';
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
+  // Initializes regional settings from localStorage with safe fallback defaults
   const [currency, setCurrency] = useState<Currency>(() => 
     (localStorage.getItem('bound-currency') as Currency) || 'NGN'
   );
@@ -11,6 +12,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     (localStorage.getItem('bound-dateformat') as DateFormat) || 'DD/MM/YYYY'
   );
 
+  // Persists preferences to localStorage, safely catching blocked storage exceptions
   useEffect(() => {
     try { 
       localStorage.setItem('bound-currency', currency); 
@@ -27,11 +29,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [dateFormat]);
 
+  // Dynamically maps the selected currency to its corresponding Intl locale
   const formatCurrency = (amount: number) => {
     const locales: Record<Currency, string> = { NGN: 'en-NG', USD: 'en-US', GBP: 'en-GB', EUR: 'en-IE' };
     return new Intl.NumberFormat(locales[currency], { style: 'currency', currency }).format(amount);
   };
 
+  // Safely parses and formats ISO date strings based on user preferences
   const formatDate = (isoString: string | null) => {
     if (!isoString) return '—';
     try {

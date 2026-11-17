@@ -13,6 +13,7 @@ interface ConfirmDialogProps {
   variant?: 'danger' | 'primary';
 }
 
+// A modal overlay component designed to intercept and confirm destructive or critical actions
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   isOpen,
   onClose,
@@ -25,6 +26,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   if (!isOpen) return null;
 
   return (
+    // Clicking the blurred backdrop acts as an implicit cancellation
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
       <div className="w-full max-w-md rounded-2xl border border-brand-border bg-brand-card p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-start gap-4">

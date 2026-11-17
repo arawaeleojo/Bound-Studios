@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-// FIX: Imported isValid to prevent malformed dates from breaking calculations
 import { isBefore, isToday, parseISO, startOfDay, isValid } from 'date-fns';
 import { Inbox, Sparkles, Send, CalendarClock, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -30,6 +29,7 @@ export const Dashboard = () => {
   const { followUps, isLoaded: followUpsLoaded } = useFollowUps();
   const { formatDate } = useSettings();
 
+  // Memoize chart data generation to prevent unnecessary recalculations on re-renders
   const chartData = useMemo(() => {
     if (!enquiriesLoaded) return [];
     return getEnquiryVolumeByPeriod(enquiries, '7days');
@@ -39,9 +39,9 @@ export const Dashboard = () => {
 
   const today = startOfDay(new Date());
 
+  // Filter out finalized enquiries and strictly validate ISO date strings to prevent NaN rendering errors
   const activePendingFollowUps = followUps.filter(fu => {
     const eq = enquiries.find(e => e.id === fu.enquiryId);
-    // FIX: Only process records with valid date formats to prevent NaN calculation errors
     if (!eq || eq.status === 'Won' || eq.status === 'Lost' || !fu.scheduledDate) return false;
     return isValid(parseISO(fu.scheduledDate));
   });
@@ -50,6 +50,7 @@ export const Dashboard = () => {
     isBefore(startOfDay(parseISO(fu.scheduledDate)), today)
   );
 
+  // Extract the 4 most immediate upcoming follow-ups and map client names for the dashboard list
   const upcomingFollowUps = activePendingFollowUps
     .filter(fu => !isBefore(startOfDay(parseISO(fu.scheduledDate)), today))
     .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
@@ -59,6 +60,7 @@ export const Dashboard = () => {
       return { ...fu, clientName: eq.clientName };
     });
 
+  // Sort the full enquiry array chronologically by date received and slice the top 4
   const recentEnquiries = [...enquiries]
     .sort((a, b) => new Date(b.dateReceived).getTime() - new Date(a.dateReceived).getTime())
     .slice(0, 4);

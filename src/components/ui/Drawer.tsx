@@ -9,8 +9,9 @@ interface DrawerProps {
   children: React.ReactNode;
 }
 
+// A slide-out contextual panel used for forms and detailed views without leaving the current page context
 export const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, title, children }) => {
-  // Prevent body scrolling when drawer is open
+  // Lock document body scrolling while the drawer is active to prevent background jumping
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -26,7 +27,7 @@ export const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose, title, children
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop */}
+      {/* Backdrop overlay that dismisses the drawer when clicked */}
       <div 
         className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}

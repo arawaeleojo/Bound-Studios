@@ -16,6 +16,7 @@ import type { Enquiry, EnquiryStatus } from '../types/enquiry';
 
 export type TimeRange = '7days' | '30days' | '90days' | '12months' | 'all';
 
+// Filters the dataset to only include enquiries received within the specified timeframe
 export const filterEnquiriesByRange = (enquiries: Enquiry[], range: TimeRange): Enquiry[] => {
   if (range === 'all') return enquiries;
   
@@ -23,8 +24,7 @@ export const filterEnquiriesByRange = (enquiries: Enquiry[], range: TimeRange): 
   let startDate: Date;
 
   switch (range) {
-    // FIX: Changed from 7, 30, 90 to 6, 29, 89.
-    // If today is counted as Day 1, going back 6 days gives exactly 7 inclusive calendar days.
+    // Calculates inclusive date boundaries where today is counted as the first calendar day
     case '7days': startDate = subDays(today, 6); break;
     case '30days': startDate = subDays(today, 29); break;
     case '90days': startDate = subDays(today, 89); break;
@@ -37,6 +37,7 @@ export const filterEnquiriesByRange = (enquiries: Enquiry[], range: TimeRange): 
   });
 };
 
+// Aggregates enquiry volume chronologically by day or month for chart rendering
 export const getEnquiryVolumeByPeriod = (enquiries: Enquiry[], range: TimeRange) => {
   const filtered = filterEnquiriesByRange(enquiries, range);
   const today = startOfDay(new Date());
@@ -58,8 +59,7 @@ export const getEnquiryVolumeByPeriod = (enquiries: Enquiry[], range: TimeRange)
       };
     });
   } else {
-    // The chart was already correctly configured to use 6, 29, and 89.
-    // Now it perfectly matches filterEnquiriesByRange.
+    // Generates daily data points using inclusive date boundaries for shorter timeframes
     const start = range === '7days' ? subDays(today, 6) : range === '30days' ? subDays(today, 29) : subDays(today, 89);
     const days = eachDayOfInterval({ start, end: today });
     
@@ -75,6 +75,7 @@ export const getEnquiryVolumeByPeriod = (enquiries: Enquiry[], range: TimeRange)
   }
 };
 
+// Calculates financial totals and win/loss conversion rates from active and closed enquiries
 export const getPipelineMetrics = (enquiries: Enquiry[]) => {
   let wonCount = 0;
   let lostCount = 0;
@@ -98,6 +99,7 @@ export const getPipelineMetrics = (enquiries: Enquiry[]) => {
   return { pipelineValue, wonValue, conversionRate, wonCount, lostCount };
 };
 
+// Computes the absolute count and relative percentage of enquiries across all pipeline stages
 export const getStatusDistribution = (enquiries: Enquiry[]) => {
   const distribution: Record<EnquiryStatus, number> = {
     'New': 0, 'Contacted': 0, 'Proposal Sent': 0, 'Won': 0, 'Lost': 0
@@ -112,6 +114,7 @@ export const getStatusDistribution = (enquiries: Enquiry[]) => {
   }));
 };
 
+// Groups enquiries by acquisition channel, falling back to 'Unknown' for missing data
 export const getSourceDistribution = (enquiries: Enquiry[]) => {
   const distribution: Record<string, number> = {};
   

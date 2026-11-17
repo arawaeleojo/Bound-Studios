@@ -15,9 +15,11 @@ export interface AppNotification {
   enquiry: Enquiry;
 }
 
+// Custom hook generating ephemeral alert states derived strictly from scheduled Follow-ups
 export function useNotifications() {
   const { enquiries } = useEnquiries();
   
+  // Persists the interaction state for read and dismissed notifications across sessions
   const [readIds, setReadIds] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('bound_read_notifications');
@@ -52,6 +54,7 @@ export function useNotifications() {
     }
   }, [dismissedIds]);
 
+  // Evaluates all non-finalized enquiries to generate active alerts mapped to their due dates
   const allGeneratedNotifications = useMemo(() => {
     const today = startOfDay(new Date());
     const threeDaysFromNow = addDays(today, 3);
@@ -92,13 +95,10 @@ export function useNotifications() {
     return generated;
   }, [enquiries, readIds]);
 
-  // FIX: Derived state replaces the cascading useEffect.
-  // Instead of updating the `dismissedIds` state to remove stale notifications, 
-  // we dynamically derive the valid ones purely during the render phase.
+  // Derived state replaces cascading useEffect hooks by dynamically mapping valid UI states synchronously
   const notifications = useMemo(() => {
     const validIds = allGeneratedNotifications.map(n => n.id);
     
-    // Only pay attention to dismissed IDs that still map to active notifications
     const validDismissedIds = dismissedIds.filter(id => validIds.includes(id));
 
     return allGeneratedNotifications

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTheme } from '../components/ThemeProvider';
 import { useSettings } from '../contexts/SettingsContext';
 
-// FIX: Imported the strict types to remove generic 'any' casting
+// Import strict type definitions for regional settings
 import type { Currency, DateFormat } from '../contexts/SettingsContext';
 
 import { useToast } from '../contexts/ToastContext';
@@ -20,6 +20,7 @@ export const Settings = () => {
   const { showToast } = useToast();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
+  // Purge all application data from localStorage and trigger a hard reload to reset the workspace state
   const handleResetData = () => {
     localStorage.setItem('bound_enquiries', '[]');
     localStorage.setItem('bound_followups', '[]');
@@ -35,6 +36,7 @@ export const Settings = () => {
     }, 1500);
   };
 
+  // Available UI theme configurations and their corresponding icons
   const themeOptions = [
     { id: 'light', label: 'Light', icon: Sun },
     { id: 'dark', label: 'Dark', icon: Moon },
@@ -80,7 +82,6 @@ export const Settings = () => {
                 label="Currency" 
                 value={currency} 
                 onChange={(e) => {
-                  // FIX: Safely typed cast
                   setCurrency(e.target.value as Currency);
                   showToast(`Currency updated to ${e.target.value}`, 'success');
                 }}
@@ -94,7 +95,6 @@ export const Settings = () => {
                 label="Date Format" 
                 value={dateFormat} 
                 onChange={(e) => {
-                  // FIX: Safely typed cast
                   setDateFormat(e.target.value as DateFormat);
                   showToast('Date format updated', 'success');
                 }}

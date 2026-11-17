@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* Tailwind theme configuration and CSS variable mapping */
 @theme
 {
   /* Fonts */
@@ -33,7 +34,7 @@
 
 :root
 {
-  /* Light Theme Foundation - UNTOUCHED */
+  /* Light Theme Foundation */
   --bg-main: #F7F5EF;
   --bg-sidebar: #202719;
   --text-primary: #292B26;
@@ -44,7 +45,6 @@
   --btn-primary: #293421;
   --btn-primary-text: #FFFFFF;
   --btn-primary-hover: #1e2618;
-  /* Added for symmetry, though currently hardcoded opacity-90 is used in button */
   --accent-secondary: #667044;
   --hover-bg: #EFECE2;
 
@@ -61,9 +61,9 @@
   --status-lost-bg: #FEE2E2;
 }
 
+/* Dark Theme Overrides */
 .dark
 {
-  /* FIX: Applied the requested premium editorial dark palette */
   --bg-main: #11150F;
   --bg-sidebar: #191F17;
   --card-bg: #232B20;
@@ -71,23 +71,18 @@
 
   --border: #394333;
   --hover-bg: #30392C;
-  /* Using the subtle divider color for standard hover surfaces */
 
   --text-primary: #F2F0E6;
   --text-secondary: #A8B09A;
   --text-sidebar: #F2F0E6;
-  /* Kept aligned with primary text for clean contrast */
 
-  /* FIX: Vibrant chartreuse primary button */
   --btn-primary: #C4D879;
   --btn-primary-text: #11150F;
-  /* Dark background color for high-contrast foreground text */
   --btn-primary-hover: #D3E88A;
 
   --accent-secondary: #9EBA65;
 
   /* Semantic Status Colors (Dark) */
-  /* Maintained existing vibrant semantic hues, but adjusted background opacity to 20% to balance the richer #232B20 cards */
   --status-new: #FBBF24;
   --status-new-bg: rgba(251, 191, 36, 0.2);
   --status-contacted: #A78BFA;
@@ -100,7 +95,7 @@
   --status-lost-bg: rgba(248, 113, 113, 0.2);
 }
 
-/* Global Styles */
+/* Global Styles and Transitions */
 body
 {
   background-color: var(--bg-main);
@@ -144,7 +139,7 @@ body
   scrollbar-color: var(--border) transparent;
 }
 
-/* Retained Glassmorphism Utilities */
+/* Reusable Glassmorphism Components */
 @layer utilities
 {
   .glass-panel

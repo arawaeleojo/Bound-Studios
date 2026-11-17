@@ -3,6 +3,7 @@ import type { FollowUp, FollowUpActivityType } from '../types/followUp';
 import type { Enquiry } from '../types/enquiry';
 import { useToast } from '../contexts/ToastContext';
 
+// Defines the contract for central follow-up scheduling, tracking, and synchronization
 interface FollowUpsContextType {
   followUps: FollowUp[];
   addFollowUp: (enquiryId: string, scheduledDate: string, description?: string) => void;
@@ -18,7 +19,7 @@ const FollowUpsContext = createContext<FollowUpsContextType | null>(null);
 export function FollowUpsProvider({ children }: { children: React.ReactNode }) {
   const { showToast } = useToast();
   
-  // Lazy initialization for safe storage reading and deduplication
+  // Lazy initialization ensuring follow-ups are deduplicated and correctly migrated from legacy enquiry arrays
   const [followUps, setFollowUps] = useState<FollowUp[]>(() => {
     let storedFollowUps = null;
     let storedEnquiries = null;
@@ -40,6 +41,7 @@ export function FollowUpsProvider({ children }: { children: React.ReactNode }) {
         // Intentionally left empty to avoid overwriting corrupted JSON
       }
     } else if (storedEnquiries) {
+      // Backwards compatibility mapping: Extracts old inline followUpDates into dedicated FollowUp entities
       try {
         const parsedEnquiries = JSON.parse(storedEnquiries);
         if (Array.isArray(parsedEnquiries)) {
@@ -74,7 +76,7 @@ export function FollowUpsProvider({ children }: { children: React.ReactNode }) {
 
   const [isLoaded] = useState(true);
 
-  // This effect purely writes deduplicated/migrated state back to storage once on mount
+  // Synchronizes the migrated memory state back to persistent storage on the initial load
   useEffect(() => {
     try {
       localStorage.setItem('bound_followups', JSON.stringify(followUps));
@@ -137,6 +139,7 @@ export function FollowUpsProvider({ children }: { children: React.ReactNode }) {
     showToast('Follow-up rescheduled.', 'success');
   };
 
+  // Reconciles manual enquiry updates: creates, modifies, or clears the linked follow-up automatically
   const syncEnquiryFollowUp = (enquiryId: string, dateStr?: string | null) => {
     const existing = followUps.find(f => f.enquiryId === enquiryId);
     
@@ -175,6 +178,7 @@ export function FollowUpsProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Silences or reactivates follow-ups based on whether the parent enquiry was won or lost
   const logClosureActivity = (enquiryId: string, status: string) => {
     const updated = followUps.map(fu => {
       if (fu.enquiryId === enquiryId) {

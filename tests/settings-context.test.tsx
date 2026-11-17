@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 
-// FIX: Importing the restored Provider and Hook from their respective isolated modules
+// Isolated module imports for testing the Settings context independently
 import { SettingsProvider } from '../src/providers/SettingsProvider';
 import { useSettings } from '../src/contexts/SettingsContext';
 
@@ -11,6 +11,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 );
 
 describe('SettingsContext', () => {
+  // Ensure a clean storage state before every test to prevent cascading failures
   beforeEach(() => {
     localStorage.clear();
   });
@@ -23,6 +24,7 @@ describe('SettingsContext', () => {
   });
 
   it('restores saved currency and date format from localStorage', () => {
+    // Seed localStorage before mounting the hook
     localStorage.setItem('bound-currency', 'USD');
     localStorage.setItem('bound-dateformat', 'MM/DD/YYYY');
 
@@ -41,6 +43,7 @@ describe('SettingsContext', () => {
 
     expect(result.current.currency).toBe('GBP');
 
+    // Wait for the useEffect flush to localStorage to complete
     await waitFor(() => {
       expect(localStorage.getItem('bound-currency')).toBe('GBP');
     });
@@ -67,6 +70,7 @@ describe('SettingsContext', () => {
 
     expect(naira).toContain('1,500');
 
+    // Mutate the currency state and re-test the formatting output
     act(() => {
       result.current.setCurrency('USD');
     });
@@ -81,6 +85,7 @@ describe('SettingsContext', () => {
 
     expect(result.current.formatDate(date)).toBe('14/11/2026');
 
+    // Cycle through the available formats and verify the output strings
     act(() => {
       result.current.setDateFormat('MM/DD/YYYY');
     });
@@ -97,6 +102,7 @@ describe('SettingsContext', () => {
   it('returns a dash when the date is null', () => {
     const { result } = renderHook(() => useSettings(), { wrapper });
 
+    // Verifies the safety fallback for missing or unparseable dates
     expect(result.current.formatDate(null)).toBe('—');
   });
 });

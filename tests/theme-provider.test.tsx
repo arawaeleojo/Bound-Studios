@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 
-// FIX: Importing the restored Provider and Hook from their respective isolated modules
+// Isolated module imports for testing the Theme context independently
 import { ThemeProvider } from '../src/providers/ThemeProvider';
 import { useTheme } from '../src/components/ThemeProvider';
 
@@ -20,6 +20,7 @@ let mockMediaQuery: {
   dispatchEvent: ReturnType<typeof vi.fn>;
 };
 
+// Mock the window.matchMedia API to simulate OS-level color scheme preference changes
 const mockMatchMedia = () => {
   mockMediaQuery = {
     matches: systemPrefersDark,

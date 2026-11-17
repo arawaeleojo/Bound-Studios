@@ -29,6 +29,7 @@ export const Statistics = () => {
   const { formatCurrency } = useSettings();
   const [timeRange, setTimeRange] = useState<TimeRange>('12months');
 
+  // Compute all statistical aggregations in a single pass whenever enquiries or the selected time range changes
   const { filteredData, volumeData, metrics, statusData, sourceData } = useMemo(() => {
     const filtered = filterEnquiriesByRange(enquiries, timeRange);
     return {
@@ -42,12 +43,12 @@ export const Statistics = () => {
 
   if (!isLoaded) return null;
 
-  // Insights Calculations
+  // Calculate active pipeline volume by excluding finalized (won/lost) enquiries
   const activeCount = filteredData.length - metrics.wonCount - metrics.lostCount;
   const topStatus = [...statusData].sort((a, b) => b.value - a.value)[0]?.name || 'None';
   const topSource = sourceData[0]?.name || 'None';
 
-  // Type helper for the donut chart filter
+  // Helper type to safely infer Recharts payload properties
   type ChartDataPoint = { name: string; value: number; percentage: number };
 
   return (
@@ -94,7 +95,7 @@ export const Statistics = () => {
                   <BarChart data={volumeData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                     <XAxis dataKey="shortLabel" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} dy={10} interval={0} />
-                    {/* FIX: Y-Axis is invisible here, acting only as a spacer so the grid perfectly aligns */}
+                    {/* Invisible Y-Axis acts as a layout spacer to perfectly align the horizontal Cartesian grid */}
                     <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: 'transparent' }} width={45} />
                     <Tooltip 
                       cursor={{ fill: 'var(--hover-bg)' }}
@@ -109,6 +110,7 @@ export const Statistics = () => {
             </div>
 
             {/* 2. STICKY Y-AXIS OVERLAY */}
+            {/* Overlays a static, non-scrolling Y-Axis directly over the scrollable chart for persistent scale reference */}
             <div className="absolute top-4 left-0 bottom-0 w-[45px] bg-brand-card z-10 pointer-events-none">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={volumeData} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
@@ -121,7 +123,7 @@ export const Statistics = () => {
                 </BarChart>
               </ResponsiveContainer>
               
-              {/* Fade gradient to smooth the transition between the sticky axis and the scrolling bars */}
+              {/* Fade gradient to smooth the visual transition between the sticky axis and the scrolling background bars */}
               <div className="absolute top-0 -right-4 bottom-0 w-4 bg-gradient-to-r from-brand-card to-transparent" />
             </div>
           </div>

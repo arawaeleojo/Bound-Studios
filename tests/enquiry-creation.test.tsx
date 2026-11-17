@@ -12,14 +12,14 @@ import type { ReactNode } from 'react';
 
 import { EnquiryForm } from '../src/components/enquiries/EnquiryForm';
 
-// FIX: Importing SettingsProvider and ToastProvider from the restored providers directory
+// Global context providers required to run the application components in isolation
 import { SettingsProvider } from '../src/providers/SettingsProvider';
 import { ToastProvider } from '../src/providers/ToastProvider';
 
 import { FollowUpsProvider } from '../src/hooks/useFollowUps';
 import { EnquiriesProvider, useEnquiries } from '../src/hooks/useEnquiries';
 
-// Recreates the provider hierarchy used by the application
+// Wrapper recreating the root provider hierarchy for custom hooks testing
 const wrapper = ({ children }: { children: ReactNode }) => (
   <ToastProvider>
     <FollowUpsProvider>
@@ -63,6 +63,7 @@ describe('Bound Studios enquiry management', () => {
       expect(handleSubmit).toHaveBeenCalledTimes(1);
     });
 
+    // Verifies default payload values are populated correctly when not explicitly set by the user
     expect(handleSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
         clientName: 'Acme Creative Ltd',
@@ -96,6 +97,7 @@ describe('Bound Studios enquiry management', () => {
       screen.getByRole('button', { name: 'Create Enquiry' })
     );
 
+    // Verifies Zod validation catches the empty required field and prevents the submit callback
     expect(
       await screen.findByText('Client name is required')
     ).toBeInTheDocument();
@@ -140,6 +142,7 @@ describe('Bound Studios enquiry management', () => {
 
     expect(createdEnquiry.clientName).toBe('Acme Creative Ltd');
 
+    // Confirms that the hook successfully persisted the data to the browser storage API
     const savedEnquiries = JSON.parse(
       localStorage.getItem('bound_enquiries') || '[]'
     );
@@ -147,6 +150,7 @@ describe('Bound Studios enquiry management', () => {
     expect(savedEnquiries).toHaveLength(1);
     expect(savedEnquiries[0].email).toBe('hello@acme.com');
 
+    // Simulate a page reload by unmounting and remounting the hook
     unmount();
 
     const { result: reloadedResult } = renderHook(
@@ -185,6 +189,7 @@ describe('Bound Studios enquiry management', () => {
       expect(result.current.isLoaded).toBe(true);
     });
 
+    // Seed the initial data
     await act(async () => {
       result.current.addEnquiry({
         clientName: 'Acme Creative Ltd',
@@ -206,6 +211,7 @@ describe('Bound Studios enquiry management', () => {
 
     const enquiryId = createdEnquiry.id;
 
+    // Mutate the specific enquiry record
     await act(async () => {
       result.current.updateEnquiry(enquiryId, {
         clientName: 'Acme Digital Ltd',
@@ -223,18 +229,15 @@ describe('Bound Studios enquiry management', () => {
       throw new Error('Updated enquiry could not be found');
     }
 
+    // Verify fields were updated in state
     expect(updatedEnquiry.clientName).toBe('Acme Digital Ltd');
-
-    expect(updatedEnquiry.projectDescription).toBe(
-      'Complete brand and website redesign'
-    );
-
+    expect(updatedEnquiry.projectDescription).toBe('Complete brand and website redesign');
+    
+    // Verify the system automatically generated an activity log for the update
     expect(updatedEnquiry.activity).toBeDefined();
+    expect(updatedEnquiry.activity?.[0]?.description).toBe('Enquiry details updated');
 
-    expect(updatedEnquiry.activity?.[0]?.description).toBe(
-    'Enquiry details updated'
-    );
-
+    // Verify the mutated state was flushed to localStorage
     const savedEnquiries = JSON.parse(
       localStorage.getItem('bound_enquiries') || '[]'
     );
@@ -260,6 +263,7 @@ describe('Bound Studios enquiry management', () => {
       expect(result.current.isLoaded).toBe(true);
     });
 
+    // Seed an enquiry that includes an active follow-up date
     await act(async () => {
       result.current.addEnquiry({
         clientName: 'Acme Creative Ltd',
@@ -284,10 +288,12 @@ describe('Bound Studios enquiry management', () => {
 
     expect(result.current.enquiries).toHaveLength(1);
 
+    // Trigger the deletion
     await act(async () => {
       result.current.deleteEnquiry(enquiryId);
     });
 
+    // Verify the enquiry was removed from state and storage
     expect(result.current.enquiries).toHaveLength(0);
 
     const savedEnquiries = JSON.parse(
@@ -296,6 +302,7 @@ describe('Bound Studios enquiry management', () => {
 
     expect(savedEnquiries).toHaveLength(0);
 
+    // Verify cascading deletion: the orphaned follow-up should also be removed
     const savedFollowUps = JSON.parse(
       localStorage.getItem('bound_followups') || '[]'
     );

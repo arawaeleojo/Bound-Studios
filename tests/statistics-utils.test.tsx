@@ -9,7 +9,7 @@ import {
   getEnquiryVolumeByPeriod,
 } from '../src/utils/statisticsUtils';
 
-// Create test enquiries with predictable values.
+// Factory function to generate predictable test enquiries with default fallback values
 const makeEnquiry = (
   overrides: Partial<Enquiry> = {}
 ): Enquiry =>
@@ -168,6 +168,7 @@ describe('Statistics utility functions', () => {
 
 
 describe('Date range filtering', () => {
+  // Lock system time to guarantee deterministic date range evaluations
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-11-14T12:00:00'));
@@ -181,11 +182,11 @@ describe('Date range filtering', () => {
     const enquiries = [
       makeEnquiry({
         id: '1',
-        dateReceived: '2026-11-07', // FIX: Set to exactly 8 days ago (Excluded)
+        dateReceived: '2026-11-07', // Set to exactly 8 days ago to verify boundary exclusion
       }),
       makeEnquiry({
         id: '2',
-        dateReceived: '2026-11-08', // FIX: Set to exactly 7 days inclusive (Included)
+        dateReceived: '2026-11-08', // Set to exactly 7 days inclusive to verify inclusion
       }),
       makeEnquiry({
         id: '3',
@@ -247,7 +248,7 @@ describe('Enquiry volume over time', () => {
     const enquiries = [
       makeEnquiry({
         id: '1',
-        dateReceived: '2026-11-08', // FIX: Set to the first day of the 7-day boundary
+        dateReceived: '2026-11-08', // Set to the first day of the 7-day boundary to verify mapping
       }),
       makeEnquiry({
         id: '2',

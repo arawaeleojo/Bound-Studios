@@ -26,6 +26,7 @@ type CategorizedFollowUp = {
   enquiry: Enquiry;
 };
 
+// Inline status dropdown component for quick pipeline updates directly from the table
 const CompactStatusSelect = ({ status, onChange }: { status: EnquiryStatus, onChange: (s: EnquiryStatus) => void }) => {
   const getColors = (s: EnquiryStatus) => {
     switch (s) {
@@ -90,26 +91,25 @@ export const FollowUps = () => {
   const [today] = useState(() => startOfDay(new Date()));
   const [now] = useState(() => Date.now());
 
-  // FIX: Deep Linking Effect - Deferred execution to satisfy strict ESLint rules
+  // Handle deep linking from other views, deferring state updates to avoid synchronous render conflicts
   useEffect(() => {
     const state = location.state as { targetFollowUpId?: string, action?: 'view_enquiry' | 'history' } | null;
     
     if (state?.targetFollowUpId) {
       const target = followUps.find(f => f.id === state.targetFollowUpId);
       if (target) {
-        // Defer the state updates to avoid synchronous cascading renders
         setTimeout(() => {
           setSelectedFollowUp(target);
           setDrawerMode(state.action || 'history');
           setIsDrawerOpen(true);
         }, 0);
         
-        // Clean up the URL state immediately
         navigate(location.pathname, { replace: true, state: {} });
       }
     }
   }, [location.state, followUps, location.pathname, navigate]);
 
+  // Categorize follow-ups by timeline (overdue, today, etc.) and apply active search/timeline filters
   const categorizedData = useMemo(() => {
     const data = { 
       all: [] as CategorizedFollowUp[], 
@@ -182,6 +182,7 @@ export const FollowUps = () => {
     setCurrentPage(totalPages);
   }
 
+  // Slice the categorized results for the current page view
   const paginatedData = currentData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -194,6 +195,7 @@ export const FollowUps = () => {
     setCurrentPage(1);
   };
 
+  // Global listeners to automatically close context menus on click or scroll
   useEffect(() => {
     const closeMenu = () => { setOpenMenuId(null); setMenuPos(null); };
     document.addEventListener('click', closeMenu);
@@ -206,6 +208,7 @@ export const FollowUps = () => {
     };
   }, []);
 
+  // Calculate context menu position dynamically to prevent it from clipping off-screen
   const toggleMenu = (e: React.MouseEvent, followUpId: string) => {
     e.stopPropagation();
     if (openMenuId === followUpId) {
@@ -241,6 +244,7 @@ export const FollowUps = () => {
     return enquiries.find(e => e.id === selectedFollowUp.enquiryId) || null;
   };
 
+  // Stage status changes for confirmation if they finalize the enquiry (Won/Lost)
   const handleStatusChange = (enquiryId: string, newStatus: EnquiryStatus) => {
     if (newStatus === 'Won' || newStatus === 'Lost') {
       setStatusConfirmData({ enquiryId, newStatus });
@@ -530,6 +534,7 @@ export const FollowUps = () => {
         variant="primary"
       />
 
+      {/* Slide-out drawer for viewing details, rescheduling, or checking activity history */}
       <Drawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)}
@@ -603,6 +608,7 @@ export const FollowUps = () => {
         )}
       </Drawer>
 
+      {/* Context menu rendered via Portal to escape table overflow bounds */}
       {openMenuId && menuPos && activeMenuFollowUp && createPortal(
         <div
           className="fixed z-[9999] w-48 overflow-hidden rounded-lg border border-brand-border bg-white dark:bg-brand-card shadow-xl py-1"

@@ -7,7 +7,9 @@ interface StatusBadgeProps {
   className?: string;
 }
 
+// A visual indicator pill that dynamically maps enquiry states to their corresponding semantic theme colors
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
+  // Maps the pill background and text colors
   const statusStyles: Record<EnquiryStatus, string> = {
     'New': 'bg-[var(--status-new-bg)] text-[var(--status-new)]',
     'Contacted': 'bg-[var(--status-contacted-bg)] text-[var(--status-contacted)]',
@@ -16,6 +18,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) =
     'Lost': 'bg-[var(--status-lost-bg)] text-[var(--status-lost)]',
   };
 
+  // Maps the solid circular indicator dot colors
   const dotStyles: Record<EnquiryStatus, string> = {
     'New': 'bg-[var(--status-new)]',
     'Contacted': 'bg-[var(--status-contacted)]',

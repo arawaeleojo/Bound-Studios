@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import { Settings } from '../src/pages/Settings';
 import { MemoryRouter } from 'react-router-dom';
 
-// FIX: Importing all restored Providers from the dedicated providers directory
+// Global context providers required to render the Settings page in complete isolation
 import { ThemeProvider } from '../src/providers/ThemeProvider';
 import { SettingsProvider } from '../src/providers/SettingsProvider';
 import { ToastProvider } from '../src/providers/ToastProvider';
@@ -11,6 +11,7 @@ import { ToastProvider } from '../src/providers/ToastProvider';
 import { FollowUpsProvider } from '../src/hooks/useFollowUps';
 import { EnquiriesProvider } from '../src/hooks/useEnquiries';
 
+// Helper function to mount the component alongside its required routing and context dependencies
 const renderSettings = () => {
     return render(
       <MemoryRouter>
@@ -44,6 +45,7 @@ describe('Settings page', () => {
 
     const dropdowns = screen.getAllByRole('combobox');
 
+    // Simulate user interaction with the currency dropdown
     fireEvent.change(dropdowns[0], {
       target: { value: 'USD' },
     });
@@ -61,6 +63,7 @@ describe('Settings page', () => {
 
     const dropdowns = screen.getAllByRole('combobox');
 
+    // Simulate user interaction with the date format dropdown
     fireEvent.change(dropdowns[1], {
       target: { value: 'YYYY-MM-DD' },
     });
@@ -121,6 +124,7 @@ describe('Settings page', () => {
   });
 
   it('does not delete data when the user cancels the confirmation', () => {
+    // Seed initial data to ensure cancellation preserves it
     localStorage.setItem('bound_enquiries', '[{"id":"test-1"}]');
     localStorage.setItem('bound_followups', '[{"id":"followup-1"}]');
 
@@ -138,6 +142,7 @@ describe('Settings page', () => {
   });
 
   it('clears all application data after confirmation', () => {
+    // Enable fake timers to synchronously advance through the application reload timeout
     vi.useFakeTimers();
 
     localStorage.setItem('bound_enquiries', '[{"id":"test-1"}]');
@@ -155,6 +160,7 @@ describe('Settings page', () => {
       screen.getByRole('button', { name: 'Yes, clear data' })
     );
 
+    // Verify all targeted storage keys were flushed
     expect(localStorage.getItem('bound_enquiries')).toBe('[]');
     expect(localStorage.getItem('bound_followups')).toBe('[]');
     expect(localStorage.getItem('bound_read_notifications')).toBe('[]');

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 
-// FIX: Importing the restored Provider components from the new providers directory
+// Global contexts for application state and preferences
 import { ThemeProvider } from './providers/ThemeProvider';
 import { SettingsProvider } from './providers/SettingsProvider';
 import { ToastProvider } from './providers/ToastProvider';
@@ -16,6 +16,7 @@ import { FollowUps } from './pages/FollowUps';
 import { Statistics } from './pages/Statistics';
 import { Settings } from './pages/Settings';
 
+// Resets window scroll position when navigating between routes
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -26,6 +27,7 @@ function ScrollToTop() {
   return null;
 }
 
+// Root application component composing contexts and routing
 function App() {
   return (
     <ThemeProvider>
