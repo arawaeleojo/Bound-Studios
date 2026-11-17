@@ -29,7 +29,6 @@ export const Statistics = () => {
   const { formatCurrency } = useSettings();
   const [timeRange, setTimeRange] = useState<TimeRange>('12months');
 
-  // Compute all statistical aggregations in a single pass whenever enquiries or the selected time range changes
   const { filteredData, volumeData, metrics, statusData, sourceData } = useMemo(() => {
     const filtered = filterEnquiriesByRange(enquiries, timeRange);
     return {
@@ -43,12 +42,10 @@ export const Statistics = () => {
 
   if (!isLoaded) return null;
 
-  // Calculate active pipeline volume by excluding finalized (won/lost) enquiries
   const activeCount = filteredData.length - metrics.wonCount - metrics.lostCount;
   const topStatus = [...statusData].sort((a, b) => b.value - a.value)[0]?.name || 'None';
   const topSource = sourceData[0]?.name || 'None';
 
-  // Helper type to safely infer Recharts payload properties
   type ChartDataPoint = { name: string; value: number; percentage: number };
 
   return (
@@ -87,45 +84,42 @@ export const Statistics = () => {
         <div className="flex flex-col gap-4 rounded-xl border border-brand-border bg-brand-card p-6 xl:col-span-2">
           <h2 className="font-semibold text-content-primary">Enquiries Volume</h2>
           
-          <div className="relative w-full">
-            {/* 1. SCROLLABLE CHART (Scrollbar Hidden for clean UI) */}
-            <div className="h-[300px] w-full pt-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <div className="h-full min-w-[600px] lg:min-w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={volumeData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                    <XAxis dataKey="shortLabel" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} dy={10} interval={0} />
-                    {/* Invisible Y-Axis acts as a layout spacer to perfectly align the horizontal Cartesian grid */}
-                    <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: 'transparent' }} width={45} />
-                    <Tooltip 
-                      cursor={{ fill: 'var(--hover-bg)' }}
-                      contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
-                      itemStyle={{ color: 'var(--text-primary)', fontWeight: 500 }}
-                      labelStyle={{ color: 'var(--text-secondary)', marginBottom: '4px' }}
-                    />
-                    <Bar dataKey="count" name="Enquiries" fill="var(--accent-secondary)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* 2. STICKY Y-AXIS OVERLAY */}
-            {/* Overlays a static, non-scrolling Y-Axis directly over the scrollable chart for persistent scale reference */}
-            <div className="absolute top-4 left-0 bottom-0 w-[45px] bg-brand-card z-10 pointer-events-none">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={volumeData} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
-                  {/* Invisible X-Axis to maintain identical bottom margin heights */}
-                  <XAxis dataKey="shortLabel" axisLine={false} tickLine={false} tick={{ fill: 'transparent', fontSize: 12 }} dy={10} interval={0} />
-                  {/* Visible Static Y-Axis */}
-                  <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} width={45} />
-                  {/* Invisible Bar so the domain calculates identically to the main chart */}
-                  <Bar dataKey="count" fill="transparent" isAnimationActive={false} />
-                </BarChart>
-              </ResponsiveContainer>
-              
-              {/* Fade gradient to smooth the visual transition between the sticky axis and the scrolling background bars */}
-              <div className="absolute top-0 -right-4 bottom-0 w-4 bg-gradient-to-r from-brand-card to-transparent" />
-            </div>
+          <div className="h-[300px] w-full pt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={volumeData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                {/* minTickGap safely distributes labels for dense datasets like 30days without overlapping */}
+                <XAxis 
+                  dataKey="shortLabel" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} 
+                  dy={10}
+                  minTickGap={30} 
+                />
+                <YAxis 
+                  allowDecimals={false} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} 
+                  width={45} 
+                />
+                <Tooltip 
+                  cursor={{ fill: 'var(--hover-bg)' }}
+                  contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                  itemStyle={{ color: 'var(--text-primary)', fontWeight: 500 }}
+                  labelStyle={{ color: 'var(--text-secondary)', marginBottom: '4px' }}
+                  labelFormatter={(_, payload) => payload[0]?.payload?.label || ''}
+                />
+                <Bar 
+                  dataKey="count" 
+                  name="Enquiries" 
+                  fill="var(--accent-secondary)" 
+                  radius={[4, 4, 0, 0]} 
+                  maxBarSize={48}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 

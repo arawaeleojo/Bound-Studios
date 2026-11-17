@@ -8,9 +8,15 @@ import {
   format,
   eachDayOfInterval,
   eachMonthOfInterval,
+  eachWeekOfInterval,
+  eachYearOfInterval,
   startOfMonth,
   isSameDay,
-  isSameMonth
+  isSameWeek,
+  isSameMonth,
+  isSameYear,
+  min,
+  differenceInMonths
 } from 'date-fns';
 import type { Enquiry, EnquiryStatus } from '../types/enquiry';
 
@@ -24,11 +30,10 @@ export const filterEnquiriesByRange = (enquiries: Enquiry[], range: TimeRange): 
   let startDate: Date;
 
   switch (range) {
-    // Calculates inclusive date boundaries where today is counted as the first calendar day
     case '7days': startDate = subDays(today, 6); break;
     case '30days': startDate = subDays(today, 29); break;
     case '90days': startDate = subDays(today, 89); break;
-    case '12months': startDate = subMonths(today, 12); break;
+    case '12months': startDate = subMonths(today, 11); break; // 11 to include current month = 12 total
   }
 
   return enquiries.filter(eq => {
@@ -37,45 +42,70 @@ export const filterEnquiriesByRange = (enquiries: Enquiry[], range: TimeRange): 
   });
 };
 
-// Aggregates enquiry volume chronologically by day or month for chart rendering
+// Aggregates enquiry volume chronologically adaptively by day, week, month, or year
 export const getEnquiryVolumeByPeriod = (enquiries: Enquiry[], range: TimeRange) => {
   const filtered = filterEnquiriesByRange(enquiries, range);
   const today = startOfDay(new Date());
   
-  if (range === '12months' || range === 'all') {
-    const start = range === 'all' 
-      ? (filtered.length > 0 ? startOfMonth(parseISO(filtered[filtered.length - 1].dateReceived)) : subMonths(today, 6))
-      : subMonths(today, 11);
-    
-    const months = eachMonthOfInterval({ start, end: today });
-    
-    return months.map(month => {
-      const count = filtered.filter(eq => isSameMonth(parseISO(eq.dateReceived), month)).length;
-      return {
-        label: format(month, 'MMM yyyy'),
-        shortLabel: format(month, 'MMM'),
-        count,
-        date: month
-      };
-    });
-  } else {
-    // Generates daily data points using inclusive date boundaries for shorter timeframes
-    const start = range === '7days' ? subDays(today, 6) : range === '30days' ? subDays(today, 29) : subDays(today, 89);
+  if (filtered.length === 0) return [];
+
+  if (range === '7days' || range === '30days') {
+    const start = range === '7days' ? subDays(today, 6) : subDays(today, 29);
     const days = eachDayOfInterval({ start, end: today });
     
-    return days.map(day => {
-      const count = filtered.filter(eq => isSameDay(parseISO(eq.dateReceived), day)).length;
-      return {
-        label: format(day, 'dd MMM yyyy'),
-        shortLabel: format(day, 'dd MMM'),
-        count,
-        date: day
-      };
-    });
+    return days.map(day => ({
+      label: format(day, 'dd MMM yyyy'),
+      shortLabel: format(day, 'dd MMM'),
+      count: filtered.filter(eq => isSameDay(parseISO(eq.dateReceived), day)).length,
+      date: day
+    }));
   }
+
+  if (range === '90days') {
+    const start = subDays(today, 89);
+    const weeks = eachWeekOfInterval({ start, end: today }, { weekStartsOn: 1 });
+    
+    return weeks.map(week => ({
+      label: `Week of ${format(week, 'dd MMM yyyy')}`,
+      shortLabel: format(week, 'dd MMM'),
+      count: filtered.filter(eq => isSameWeek(parseISO(eq.dateReceived), week, { weekStartsOn: 1 })).length,
+      date: week
+    }));
+  }
+
+  if (range === '12months' || range === 'all') {
+    let start = subMonths(today, 11);
+    
+    if (range === 'all') {
+      const allDates = filtered.map(eq => parseISO(eq.dateReceived));
+      start = startOfMonth(min(allDates));
+    }
+
+    const diffMonths = differenceInMonths(today, start);
+    
+    // Group by year if dataset spans more than 36 months to maintain readability
+    if (range === 'all' && diffMonths > 36) {
+      const years = eachYearOfInterval({ start, end: today });
+      return years.map(year => ({
+        label: format(year, 'yyyy'),
+        shortLabel: format(year, 'yyyy'),
+        count: filtered.filter(eq => isSameYear(parseISO(eq.dateReceived), year)).length,
+        date: year
+      }));
+    }
+
+    const months = eachMonthOfInterval({ start, end: today });
+    return months.map(month => ({
+      label: format(month, 'MMM yyyy'),
+      shortLabel: range === 'all' ? format(month, 'MMM yy') : format(month, 'MMM'),
+      count: filtered.filter(eq => isSameMonth(parseISO(eq.dateReceived), month)).length,
+      date: month
+    }));
+  }
+  
+  return [];
 };
 
-// Calculates financial totals and win/loss conversion rates from active and closed enquiries
 export const getPipelineMetrics = (enquiries: Enquiry[]) => {
   let wonCount = 0;
   let lostCount = 0;
@@ -99,7 +129,6 @@ export const getPipelineMetrics = (enquiries: Enquiry[]) => {
   return { pipelineValue, wonValue, conversionRate, wonCount, lostCount };
 };
 
-// Computes the absolute count and relative percentage of enquiries across all pipeline stages
 export const getStatusDistribution = (enquiries: Enquiry[]) => {
   const distribution: Record<EnquiryStatus, number> = {
     'New': 0, 'Contacted': 0, 'Proposal Sent': 0, 'Won': 0, 'Lost': 0
@@ -114,7 +143,6 @@ export const getStatusDistribution = (enquiries: Enquiry[]) => {
   }));
 };
 
-// Groups enquiries by acquisition channel, falling back to 'Unknown' for missing data
 export const getSourceDistribution = (enquiries: Enquiry[]) => {
   const distribution: Record<string, number> = {};
   
